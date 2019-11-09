@@ -6,16 +6,28 @@ using Microsoft.Azure.ServiceBus;
 
 namespace TopicSender
 {
-    class Program
+    class TopicSender
     {
         static ITopicClient topicClient;
         static void Main(string[] args)
         {
-            MainAsync().GetAwaiter().GetResult();
+            int numMsgs;
+
+            if (args.Length == 0)
+            {
+                System.Console.WriteLine("Usage: Program <Topic Name> <Connection String> <Num of Msgs>");
+            }
+
+            bool test = int.TryParse(args[2], out numMsgs);
+            if (!test)
+            {
+                Console.WriteLine("Please enter a numeric value for number of messages.");
+            }
+
+            MainAsync(args[0], args[1], numMsgs).GetAwaiter().GetResult();
         }
-        static async Task MainAsync()
+        static async Task MainAsync(string TopicName, string ServiceBusConnectionString, int numberOfMessages)
         {
-            const int numberOfMessages = 10;
             topicClient = new TopicClient(ServiceBusConnectionString, TopicName);
 
             Console.WriteLine("======================================================");

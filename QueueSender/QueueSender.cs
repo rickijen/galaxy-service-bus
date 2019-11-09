@@ -6,7 +6,7 @@ using Microsoft.Azure.ServiceBus;
 
 namespace QueueSender
 {
-    class Sender
+    class QueueSender
     {
         static IQueueClient queueClient;
 
