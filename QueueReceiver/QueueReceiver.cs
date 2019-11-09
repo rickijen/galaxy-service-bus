@@ -8,14 +8,16 @@ namespace QueueReceiver
 {
     class QueueReceiver
     {
-        const string ServiceBusConnectionString = "Endpoint=sb://galaxy.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=gbyeXkuFjLcmC2d4YyQZQ+SbWMje0af88qxHBdMGUks=";
-        const string QueueName = "queue02";
         static IQueueClient queueClient;
         static void Main(string[] args)
         {
-            MainAsync().GetAwaiter().GetResult();
+            // Test if input arguments were supplied.
+            if (args.Length == 0)
+                Console.WriteLine("Usage: Program <Queue Name> <Connection String>");
+
+            MainAsync(args[0], args[1]).GetAwaiter().GetResult();
         }
-        static async Task MainAsync()
+        static async Task MainAsync(string QueueName, string ServiceBusConnectionString)
         {
             queueClient = new QueueClient(ServiceBusConnectionString, QueueName);
 
@@ -49,8 +51,12 @@ namespace QueueReceiver
         }
         static async Task ProcessMessagesAsync(Message message, CancellationToken token)
         {
+            DateTime msgUtcNow = DateTime.UtcNow;
+            //System.TimeSpan timeSpan = msgUtcNow.Subtract(message.SystemProperties.EnqueuedTimeUtc);
+
             // Process the message.
-            Console.WriteLine($"Received message: SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
+            //Console.WriteLine($"Rcvd msg: SeqNum:{message.SystemProperties.SequenceNumber} EnqTime: {message.SystemProperties.EnqueuedTimeUtc} Now: {msgUtcNow} Latency: {timeSpan} Body:{Encoding.UTF8.GetString(message.Body)}");
+            Console.WriteLine($"RCVD: SeqNum:{message.SystemProperties.SequenceNumber} [Latency:{msgUtcNow.Subtract(message.SystemProperties.EnqueuedTimeUtc)}] Body:{Encoding.UTF8.GetString(message.Body)}");
 
             // Complete the message so that it is not received again.
             // This can be done only if the queue Client is created in ReceiveMode.PeekLock mode (which is the default).

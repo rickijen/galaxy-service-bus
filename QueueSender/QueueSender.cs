@@ -4,34 +4,31 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.ServiceBus;
 
-namespace galaxy_service_bus
+namespace QueueSender
 {
     class Sender
     {
-        const string ServiceBusConnectionString = "Endpoint=sb://galaxy.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=gbyeXkuFjLcmC2d4YyQZQ+SbWMje0af88qxHBdMGUks=";
-        const string QueueName = "queue02";
         static IQueueClient queueClient;
 
         static void Main(string[] args)
         {
-            int num;
+            int numMsgs;
 
             if (args.Length == 0)
             {
-                System.Console.WriteLine("Please enter a numeric argument.");
+                System.Console.WriteLine("Usage: Program <Queue Name> <Connection String> <Num of Msgs>");
             }
             
-            bool test = int.TryParse(args[0], out num);
+            bool test = int.TryParse(args[2], out numMsgs);
             if (!test)
             {
                 Console.WriteLine("Please enter a numeric value for number of messages.");
             }
 
-            MainAsync(num).GetAwaiter().GetResult();
+            MainAsync(args[0], args[1], numMsgs).GetAwaiter().GetResult();
         }
-        static async Task MainAsync(int num)
+        static async Task MainAsync(string QueueName, string ServiceBusConnectionString, int numberOfMessages)
         {
-            int numberOfMessages = num;
             queueClient = new QueueClient(ServiceBusConnectionString, QueueName);
 
             Console.WriteLine("======================================================");

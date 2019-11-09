@@ -4,12 +4,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.ServiceBus;
 
-namespace galaxy_service_bus
+namespace TopicSender
 {
-    class Sender
+    class Program
     {
-        const string ServiceBusConnectionString = "Endpoint=sb://galaxy.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=gbyeXkuFjLcmC2d4YyQZQ+SbWMje0af88qxHBdMGUks=";
-        const string TopicName = "topic-00";
         static ITopicClient topicClient;
         static void Main(string[] args)
         {
@@ -53,6 +51,5 @@ namespace galaxy_service_bus
                 Console.WriteLine($"{DateTime.Now} :: Exception: {exception.Message}");
             }
         }
-
     }
 }

@@ -4,19 +4,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.ServiceBus;
 
-namespace Receiver_00
+namespace SubscriptionReceiver
 {
-    class Receiver
+    class SubscriptionReceiver
     {
-        const string ServiceBusConnectionString = "Endpoint=sb://galaxy.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=gbyeXkuFjLcmC2d4YyQZQ+SbWMje0af88qxHBdMGUks=";
-        const string TopicName = "topic-00";
-        const string SubscriptionName = "sub-00";
         static ISubscriptionClient subscriptionClient;
         static void Main(string[] args)
         {
-            MainAsync().GetAwaiter().GetResult();
+            // Test if input arguments were supplied.
+            if (args.Length == 0)
+                Console.WriteLine("Usage: Program <Topic Name> <Subscription Name> <Connection String>");
+
+            MainAsync(args[0], args[1], args[2]).GetAwaiter().GetResult();
         }
-        static async Task MainAsync()
+        static async Task MainAsync(string TopicName, string SubscriptionName, string ServiceBusConnectionString)
         {
             subscriptionClient = new SubscriptionClient(ServiceBusConnectionString, TopicName, SubscriptionName);
 
@@ -50,8 +51,11 @@ namespace Receiver_00
         }
         static async Task ProcessMessagesAsync(Message message, CancellationToken token)
         {
+            DateTime msgUtcNow = DateTime.UtcNow;
+
             // Process the message.
-            Console.WriteLine($"Received message: SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
+            //Console.WriteLine($"Received message: SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
+            Console.WriteLine($"RCVD: SeqNum:{message.SystemProperties.SequenceNumber} [Latency:{msgUtcNow.Subtract(message.SystemProperties.EnqueuedTimeUtc)}] Body:{Encoding.UTF8.GetString(message.Body)}");
 
             // Complete the message so that it is not received again.
             // This can be done only if the subscriptionClient is created in ReceiveMode.PeekLock mode (which is the default).
