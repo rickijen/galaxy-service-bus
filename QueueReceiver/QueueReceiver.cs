@@ -52,10 +52,8 @@ namespace QueueReceiver
         static async Task ProcessMessagesAsync(Message message, CancellationToken token)
         {
             DateTime msgUtcNow = DateTime.UtcNow;
-            //System.TimeSpan timeSpan = msgUtcNow.Subtract(message.SystemProperties.EnqueuedTimeUtc);
 
             // Process the message.
-            //Console.WriteLine($"Rcvd msg: SeqNum:{message.SystemProperties.SequenceNumber} EnqTime: {message.SystemProperties.EnqueuedTimeUtc} Now: {msgUtcNow} Latency: {timeSpan} Body:{Encoding.UTF8.GetString(message.Body)}");
             Console.WriteLine($"RCVD: SeqNum:{message.SystemProperties.SequenceNumber} [Latency:{msgUtcNow.Subtract(message.SystemProperties.EnqueuedTimeUtc)}] Body:{Encoding.UTF8.GetString(message.Body)}");
 
             // Complete the message so that it is not received again.

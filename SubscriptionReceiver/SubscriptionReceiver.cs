@@ -54,7 +54,6 @@ namespace SubscriptionReceiver
             DateTime msgUtcNow = DateTime.UtcNow;
 
             // Process the message.
-            //Console.WriteLine($"Received message: SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
             Console.WriteLine($"RCVD: SeqNum:{message.SystemProperties.SequenceNumber} [Latency:{msgUtcNow.Subtract(message.SystemProperties.EnqueuedTimeUtc)}] Body:{Encoding.UTF8.GetString(message.Body)}");
 
             // Complete the message so that it is not received again.
