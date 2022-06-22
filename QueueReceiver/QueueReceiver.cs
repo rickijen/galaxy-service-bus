@@ -25,7 +25,6 @@ namespace QueueReceiver
         {
             DateTimeOffset msgUtcNow = DateTime.UtcNow;
             string body = args.Message.Body.ToString();
-            Console.WriteLine($"Received: {body}");
             Console.WriteLine($"RCVD: SeqNum:{args.Message.SequenceNumber} [Latency:{msgUtcNow.Subtract(args.Message.EnqueuedTime)}] Body:{body}");
 
             // complete the message. messages is deleted from the queue. 

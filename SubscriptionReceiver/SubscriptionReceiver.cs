@@ -2,13 +2,14 @@
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.ServiceBus;
+using Azure.Messaging.ServiceBus;
 
 namespace SubscriptionReceiver
 {
     class SubscriptionReceiver
     {
-        static ISubscriptionClient subscriptionClient;
+        static ServiceBusClient client;
+        static ServiceBusProcessor processor;
         static void Main(string[] args)
         {
             // Test if input arguments were supplied.
@@ -17,63 +18,63 @@ namespace SubscriptionReceiver
 
             MainAsync(args[0], args[1], args[2]).GetAwaiter().GetResult();
         }
-        static async Task MainAsync(string TopicName, string SubscriptionName, string ServiceBusConnectionString)
+
+        // handle received messages
+        static async Task MessageHandler(ProcessMessageEventArgs args)
         {
-            subscriptionClient = new SubscriptionClient(ServiceBusConnectionString, TopicName, SubscriptionName);
+            DateTimeOffset msgUtcNow = DateTime.UtcNow;
+            string body = args.Message.Body.ToString();
+            Console.WriteLine($"RCVD: SeqNum:{args.Message.SequenceNumber} [Latency:{msgUtcNow.Subtract(args.Message.EnqueuedTime)}] Body:{body}");
 
-            Console.WriteLine("======================================================");
-            Console.WriteLine("Press ENTER key to exit after receiving all the messages.");
-            Console.WriteLine("======================================================");
-
-            // Register subscription message handler and receive messages in a loop
-            RegisterOnMessageHandlerAndReceiveMessages();
-
-            Console.ReadKey();
-
-            await subscriptionClient.CloseAsync();
+            // complete the message. messages is deleted from the subscription. 
+            await args.CompleteMessageAsync(args.Message);
         }
-        static void RegisterOnMessageHandlerAndReceiveMessages()
+
+        // handle any errors when receiving messages
+        static Task ErrorHandler(ProcessErrorEventArgs args)
         {
-            // Configure the message handler options in terms of exception handling, number of concurrent messages to deliver, etc.
-            var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
-            {
-                // Maximum number of concurrent calls to the callback ProcessMessagesAsync(), set to 1 for simplicity.
-                // Set it according to how many messages the application wants to process in parallel.
-                MaxConcurrentCalls = 1,
-
-                // Indicates whether the message pump should automatically complete the messages after returning from user callback.
-                // False below indicates the complete operation is handled by the user callback as in ProcessMessagesAsync().
-                AutoComplete = false
-            };
-
-            // Register the function that processes messages.
-            subscriptionClient.RegisterMessageHandler(ProcessMessagesAsync, messageHandlerOptions);
-        }
-        static async Task ProcessMessagesAsync(Message message, CancellationToken token)
-        {
-            DateTime msgUtcNow = DateTime.UtcNow;
-
-            // Process the message.
-            Console.WriteLine($"RCVD: SeqNum:{message.SystemProperties.SequenceNumber} [Latency:{msgUtcNow.Subtract(message.SystemProperties.EnqueuedTimeUtc)}] Body:{Encoding.UTF8.GetString(message.Body)}");
-
-            // Complete the message so that it is not received again.
-            // This can be done only if the subscriptionClient is created in ReceiveMode.PeekLock mode (which is the default).
-            await subscriptionClient.CompleteAsync(message.SystemProperties.LockToken);
-
-            // Note: Use the cancellationToken passed as necessary to determine if the subscriptionClient has already been closed.
-            // If subscriptionClient has already been closed, you can choose to not call CompleteAsync() or AbandonAsync() etc.
-            // to avoid unnecessary exceptions.
-        }
-        // Use this handler to examine the exceptions received on the message pump.
-        static Task ExceptionReceivedHandler(ExceptionReceivedEventArgs exceptionReceivedEventArgs)
-        {
-            Console.WriteLine($"Message handler encountered an exception {exceptionReceivedEventArgs.Exception}.");
-            var context = exceptionReceivedEventArgs.ExceptionReceivedContext;
-            Console.WriteLine("Exception context for troubleshooting:");
-            Console.WriteLine($"- Endpoint: {context.Endpoint}");
-            Console.WriteLine($"- Entity Path: {context.EntityPath}");
-            Console.WriteLine($"- Executing Action: {context.Action}");
+            Console.WriteLine(args.Exception.ToString());
             return Task.CompletedTask;
+        }
+
+        static async Task MainAsync(string topicName, string subscriptionName, string serviceBusConnectionString)
+        {
+            // The Service Bus client types are safe to cache and use as a singleton for the lifetime
+            // of the application, which is best practice when messages are being published or read
+            // regularly.
+            //
+            // Create the clients that we'll use for sending and processing messages.
+            client = new ServiceBusClient(serviceBusConnectionString);
+
+            // create a processor that we can use to process the messages
+            processor = client.CreateProcessor(topicName, subscriptionName, new ServiceBusProcessorOptions());
+
+            try
+            {
+                // add handler to process messages
+                processor.ProcessMessageAsync += MessageHandler;
+
+                // add handler to process any errors
+                processor.ProcessErrorAsync += ErrorHandler;
+
+                // start processing 
+                await processor.StartProcessingAsync();
+
+                Console.WriteLine("Wait for a minute and then press any key to end the processing");
+                Console.ReadKey();
+
+                // stop processing 
+                Console.WriteLine("\nStopping the receiver...");
+                await processor.StopProcessingAsync();
+                Console.WriteLine("Stopped receiving messages");
+            }
+            finally
+            {
+                // Calling DisposeAsync on client types is required to ensure that network
+                // resources and other unmanaged objects are properly cleaned up.
+                await processor.DisposeAsync();
+                await client.DisposeAsync();
+            }
         }
     }
 }

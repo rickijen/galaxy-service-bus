@@ -2,13 +2,14 @@
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.ServiceBus;
+using Azure.Messaging.ServiceBus;
 
 namespace TopicSender
 {
     class TopicSender
     {
-        static ITopicClient topicClient;
+        static ServiceBusClient topicClient;
+        static ServiceBusSender sender;
         static void Main(string[] args)
         {
             int numMsgs;
@@ -26,9 +27,52 @@ namespace TopicSender
 
             MainAsync(args[0], args[1], numMsgs).GetAwaiter().GetResult();
         }
-        static async Task MainAsync(string TopicName, string ServiceBusConnectionString, int numberOfMessages)
+
+        static async Task MainAsync(string topicName, string serviceBusConnectionString, int numberOfMessages)
         {
-            topicClient = new TopicClient(ServiceBusConnectionString, TopicName);
+            // The Service Bus client types are safe to cache and use as a singleton for the lifetime
+            // of the application, which is best practice when messages are being published or read
+            // regularly.
+            //
+            // Create the clients that we'll use for sending and processing messages.
+            topicClient = new ServiceBusClient(serviceBusConnectionString);
+            sender = topicClient.CreateSender(topicName);
+
+            // create a batch 
+            using ServiceBusMessageBatch messageBatch = await sender.CreateMessageBatchAsync();
+
+            for (int i = 1; i <= numberOfMessages; i++)
+            {
+                // try adding a message to the batch
+                if (!messageBatch.TryAddMessage(new ServiceBusMessage($"Message {i}")))
+                {
+                    // if it is too large for the batch
+                    throw new Exception($"The message {i} is too large to fit in the batch.");
+                }
+            }
+
+            try
+            {
+                // Use the producer client to send the batch of messages to the Service Bus topic
+                await sender.SendMessagesAsync(messageBatch);
+                Console.WriteLine($"A batch of {numberOfMessages} messages has been published to the topic.");
+            }
+            finally
+            {
+                // Calling DisposeAsync on client types is required to ensure that network
+                // resources and other unmanaged objects are properly cleaned up.
+                await sender.DisposeAsync();
+                await topicClient.DisposeAsync();
+            }
+
+            Console.WriteLine("Press any key to end the application");
+            Console.ReadKey();
+        }
+
+/*
+        static async Task MainAsync(string topicName, string serviceBusConnectionString, int numberOfMessages)
+        {
+            topicClient = new TopicClient(serviceBusConnectionString, topicName);
 
             Console.WriteLine("======================================================");
             Console.WriteLine("Press ENTER key to exit after sending all the messages.");
@@ -63,5 +107,6 @@ namespace TopicSender
                 Console.WriteLine($"{DateTime.Now} :: Exception: {exception.Message}");
             }
         }
+*/        
     }
 }
