@@ -5,10 +5,10 @@ param (
 
 Write-Host sku: $sku
 
-$filePath = "C:\Users\rijen\source\repos\galaxy-service-bus\QueueReceiver\bin\Debug\netcoreapp3.0\QueueReceiver.exe"
-$queueName = "queue02"
-$connStrStd = "Endpoint=sb://galaxy.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=gbyeXkuFjLcmC2d4YyQZQ+SbWMje0af88qxHBdMGUks="
-$connStrPrm = "Endpoint=sb://galaxy-premium.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=YfdWT2XPCw0RG+rt8BBvPUJxz6fSASYnv7krWc4UoME="
+$filePath = "C:\Users\azureuser\galaxy-service-bus\QueueReceiver\bin\Debug\net6.0\QueueReceiver.exe"
+$queueName = "myqueue"
+$connStrStd = "Endpoint=sb://vitasapi.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=F/XXX"
+$connStrPrm = "Endpoint=sb://vitasapi.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=F/XXX"
 
 for ($i=0;$i -lt $n; $i++) {
 

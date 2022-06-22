@@ -5,11 +5,11 @@ param (
 
 Write-Host sku: $sku
 
-$filePath = "C:\Users\rijen\source\repos\galaxy-service-bus\SubscriptionReceiver\bin\Debug\netcoreapp3.0\SubscriptionReceiver.exe"
-$topicName = "topic-00"
-$subName = "sub-00"
-$connStrStd = "Endpoint=sb://galaxy.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=gbyeXkuFjLcmC2d4YyQZQ+SbWMje0af88qxHBdMGUks="
-$connStrPrm = "Endpoint=sb://galaxy-premium.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=YfdWT2XPCw0RG+rt8BBvPUJxz6fSASYnv7krWc4UoME="
+$filePath = "C:\Users\azureuser\galaxy-service-bus\SubscriptionReceiver\bin\Debug\net6.0\SubscriptionReceiver.exe"
+$topicName = "mytopic"
+$subName = "mysubscription"
+$connStrStd = "Endpoint=sb://vitasapi.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=F/XXX"
+$connStrPrm = "Endpoint=sb://vitasapi.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=F/XXX"
 
 for ($i=0;$i -lt $n; $i++) {
 
